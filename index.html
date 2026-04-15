@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nachricht an Lichterkette</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .box {
+            background: #16213e;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+        h1 { font-size: 1.5em; margin-bottom: 20px; }
+        input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        button:hover { background: #c73652; }
+        #status {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>💡 Nachricht an die Lichterkette</h1>
+        <input type="text" id="nachricht" placeholder="Deine Nachricht..." maxlength="50">
+        <br>
+        <button onclick="senden()">Senden ✉️</button>
+        <div id="status">Verbinde...</div>
+    </div>
+
+    <!-- MQTT über WebSockets -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script>
+        // Verbindung zu HiveMQ über WebSockets
+        var client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
+
+        client.on('connect', function () {
+            document.getElementById('status').innerText = '✅ Verbunden!';
+            document.getElementById('status').style.color = '#4ecca3';
+        });
+
+        client.on('error', function () {
+            document.getElementById('status').innerText = '❌ Verbindung fehlgeschlagen';
+            document.getElementById('status').style.color = '#e94560';
+        });
+
+        function senden() {
+            var text = document.getElementById('nachricht').value;
+            if (text.length === 0) return;
+
+            // Nachricht an das Topic senden
+            client.publish('ardspy/nachricht', text);
+
+            document.getElementById('status').innerText = '📨 Gesendet: "' + text + '"';
+            document.getElementById('status').style.color = '#4ecca3';
+            document.getElementById('nachricht').value = '';
+        }
+
+        // Enter-Taste zum Senden
+        document.getElementById('nachricht').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') senden();
+        });
+    </script>
+</body>
+</html>
